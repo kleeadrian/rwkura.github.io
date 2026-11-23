@@ -25,3 +25,15 @@ jobs:
         run : sed -i '2d' "./_data/dates.csv"
       # Commit all changed files back to the repository
       - uses: stefanzweifel/git-auto-commit-action@v5
+
+      # Fail the run (GitHub emails the repo owner) when the schedule is
+      # nearly empty, so someone tops up _data/dates.csv before the
+      # homepage has no upcoming run to show.
+      - name: Fail when fewer than 4 scheduled runs remain
+        run: |
+          rows=$(( $(grep -c '' _data/dates.csv) - 1 ))
+          echo "Scheduled runs remaining: $rows"
+          if [ "$rows" -lt 4 ]; then
+            echo "::error file=_data/dates.csv::Only $rows scheduled runs left in _data/dates.csv - please top up the schedule."
+            exit 1
+          fi
