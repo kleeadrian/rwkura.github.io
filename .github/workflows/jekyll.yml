@@ -34,6 +34,8 @@ jobs:
   # Build job
   build:
     runs-on: ubuntu-24.04
+    env:
+      BUNDLE_WITHOUT: test # html-proofer is only needed by pr-checks.yml
     steps:
       - name: Checkout
         uses: actions/checkout@v4
