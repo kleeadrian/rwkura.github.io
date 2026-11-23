@@ -1,0 +1,58 @@
+name: PR checks
+
+on:
+  pull_request:
+    branches: ["master"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@540484a3c0f308b08619664ec40bf6c371d172c3 # v1.205.0
+        with:
+          ruby-version: '3.3.6' # keep in sync with jekyll.yml
+          bundler-cache: true # installs the versions pinned in Gemfile.lock
+      - name: Build with Jekyll
+        run: bundle exec jekyll build
+        env:
+          JEKYLL_ENV: production
+      # Non-blocking until the existing broken links are fixed (ADR-10: GPX links
+      # written with backslashes, relative waiver PDF links, and missing alt text
+      # on course images). Make it blocking by removing continue-on-error once
+      # master passes cleanly.
+      - name: Check links, images and alt text (html-proofer)
+        id: htmlproofer
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          bundle exec htmlproofer ./_site \
+            --disable-external \
+            --no-enforce-https \
+            --allow-missing-href \
+            2>&1 | tee htmlproofer.log
+      - name: Summarise html-proofer result
+        if: always()
+        run: |
+          {
+            echo "## html-proofer"
+            if [ "${{ steps.htmlproofer.outcome }}" = "success" ]; then
+              echo "No failures found."
+            else
+              echo "html-proofer reported failures (non-blocking for now; see the step log)."
+              echo
+              echo '```'
+              grep -E "^(HTML-Proofer found|For the )" htmlproofer.log || true
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
