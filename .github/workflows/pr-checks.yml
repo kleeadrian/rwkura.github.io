@@ -1,0 +1,73 @@
+name: PR checks
+
+on:
+  pull_request:
+    branches: ["master"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@540484a3c0f308b08619664ec40bf6c371d172c3 # v1.205.0
+        with:
+          ruby-version: '3.3.6' # keep in sync with jekyll.yml
+          bundler-cache: true # installs the versions pinned in Gemfile.lock
+      - name: Build with Jekyll
+        run: bundle exec jekyll build
+        env:
+          JEKYLL_ENV: production
+      # html-proofer reports every failure, but only failures outside the known
+      # baseline fail the job. The baseline is the existing broken content tracked
+      # in ADR-10: GPX links written with backslashes, relative waiver PDF links,
+      # and missing alt text on the hoka-training course images. Remove a pattern
+      # from KNOWN_FAILURES once it is fixed on master.
+      - name: Check links, images and alt text (html-proofer)
+        id: htmlproofer
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          bundle exec htmlproofer ./_site \
+            --disable-external \
+            --no-enforce-https \
+            --allow-missing-href \
+            2>&1 | tee htmlproofer.log
+      - name: Fail on new html-proofer failures
+        if: steps.htmlproofer.outcome == 'failure'
+        env:
+          KNOWN_FAILURES: >-
+            internally linking to \\assets\\gpx_files\\[^ ]+\.gpx, which does not exist|internally linking to \.\./assets/docs/SHR-Waiver\.pdf, which does not exist|image /assets/images/courses/hoka-training-(long|short)\.jpeg does not have an alt attribute
+        run: |
+          total=$(grep -oE "HTML-Proofer found [0-9]+ failures?" htmlproofer.log | grep -oE "[0-9]+" || true)
+          if [ -z "$total" ]; then
+            echo "::error::html-proofer failed without reporting failures; see the previous step's log."
+            exit 1
+          fi
+          grep -E "^  " htmlproofer.log | grep -vE "$KNOWN_FAILURES" > new-failures.txt || true
+          new=$(wc -l < new-failures.txt)
+          {
+            echo "## html-proofer"
+            echo "$total failures in total; $new not in the known ADR-10 baseline."
+            if [ "$new" -gt 0 ]; then
+              echo
+              echo '```'
+              cat new-failures.txt
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::warning::html-proofer found $total failures ($new new, the rest are the known ADR-10 baseline)."
+          if [ "$new" -gt 0 ]; then
+            echo "::error::html-proofer found $new failure(s) outside the known baseline:"
+            cat new-failures.txt
+            exit 1
+          fi
