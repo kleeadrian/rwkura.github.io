@@ -18,8 +18,8 @@ The parent prompt gives you either a list of pages (site-relative paths like `/`
 
 ## Procedure
 
-1. **Build**: `bundle exec jekyll build -d /tmp/shr-site-visual 2>&1 | tail -5`. If a before/after comparison is requested, never check out the base ref in the main repo — use `git worktree add /tmp/shr-base <baseRef>`, build that into `/tmp/shr-site-visual-base`, and remove the worktree afterwards (`git worktree remove --force /tmp/shr-base`).
-2. **Serve**: `cd /tmp/shr-site-visual && python3 -m http.server 4180 --bind 127.0.0.1 &` (kill it when done; serve the base build on 4181 if comparing).
+1. **Build**: `bundle exec jekyll build -d /tmp/shr-site-visual 2>&1 | tail -5`. If a before/after comparison is requested, never check out the base ref in the main repo — use `git worktree add /tmp/vc-base-$$ <baseRef>` (a unique path), build that into `/tmp/shr-site-visual-base-$$`, and remove the worktree afterwards (`git worktree remove --force /tmp/vc-base-$$`).
+2. **Serve** on free ports, because other agents may be using 4180/4181: `P=$(python3 -c 'import socket;s=socket.socket();s.bind(("127.0.0.1",0));print(s.getsockname()[1])')`, then `(cd /tmp/shr-site-visual && python3 -m http.server $P --bind 127.0.0.1 &)`. Check with `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:$P/` that your own server answers. If you are comparing, serve the base build on a second free port. Stop only the servers you started.
 3. **For each page and each width** — desktop 1280x800 and mobile 375x800:
 ```bash
 agent-browser set viewport 1280 800   # or 375 800

@@ -27,31 +27,26 @@ The parent prompt tells you what to review: a diff (`git diff <base>`), a branch
 
 ## Build and checks (always run these)
 
-Run from the repo root. Ruby 3.2 and Bundler are installed; gems live in `~/.cache/shr-bundle` (already configured). html-proofer 5 is installed as a user gem.
+Ruby 3.2 and Bundler are installed; gems live in `~/.cache/shr-bundle` (already configured). html-proofer 5 and nokogiri are user gems. Master already has many html-proofer failures, and that set shrinks as fixes merge, so never judge by a fixed list or by failure type. Build the base and the head, then compare their actual failures.
+
+1. **Choose the base and head.** Uncommitted changes: the base is `HEAD` and the head is the working tree (`.`). A branch: the base is `$(git merge-base <branch> origin/master)` and the head is the branch tip. If the parent names a base, use it. Check out each non-working-tree ref into its own throwaway worktree with a unique path, for example `git worktree add /tmp/cr-base-$$ <base>`. Remove each worktree with `git worktree remove --force <path>` when you finish.
+2. **Build both and diff the failures**:
 
 ```bash
-bundle exec jekyll build -d /tmp/shr-site-review 2>&1 | tail -15
+.factory/scripts/htmlproofer-diff.sh <base-src-dir> <head-src-dir> /tmp/cr-proofer-$$
 ```
 
-- Sass deprecation warnings (slash-div, darken, etc.) are pre-existing noise, not failures. A non-zero exit or a Liquid/YAML error IS a failure.
-- Then the link/image check:
+   The script builds both trees, runs `htmlproofer --disable-external --no-enforce-https --allow-missing-href` on each, and compares failures by built page and message, counting duplicates. It prints `NEW failures` (present in the head but not the base) and `FIXED failures`. It exits 1 when there are new failures and 2 when a build fails. If the script is missing from the checkout, use the copy in the repo clone at `/home/factory-user/repos/rwkura.github.io/.factory/scripts/`. Every NEW line is a finding, even when it matches a failure type master already has (another backslash `\assets\gpx_files\...` link, another `../assets/docs/SHR-Waiver.pdf` link, another missing `alt`). Mention FIXED lines as improvements.
+   - Sass deprecation warnings (slash-div, darken, etc.) are pre-existing noise. A failed build, or a Liquid or YAML error, IS a failure.
+3. **HTML parse diff for changed `.html` files and layouts or includes.** Parse the same built page from both sides and report only errors that appear in the head but not the base (ignore line numbers):
 
 ```bash
-export PATH="$(ruby -e 'print Gem.user_dir')/bin:$PATH"
-htmlproofer /tmp/shr-site-review --disable-external --no-enforce-https --allow-missing-href 2>&1 | tail -60
+for s in base head; do GEM_HOME=$(ruby -e 'print Gem.user_dir') ruby -e 'require "nokogiri"; Nokogiri::HTML5(File.read(ARGV[0]), max_errors: 50).errors.each { |e| puts e.to_s.lines.first.sub(/^\d+:\d+: /, "") }' /tmp/cr-proofer-$$/site-$s/<page>/index.html | sort > /tmp/cr-parse-$$-$s.txt; done
+comm -13 /tmp/cr-parse-$$-base.txt /tmp/cr-parse-$$-head.txt
 ```
-
-- **Known baseline on master (not new findings)**: ~93 failures made of (a) internal links to `\assets\gpx_files\<course>.gpx` using backslashes (~44), (b) relative links `../assets/docs/SHR-Waiver.pdf` from course pages (~45), (c) 4 images missing `alt` on hoka-training course pages and the courses index. Report only failures NOT in these classes, or a change in these counts, as new findings.
-- For changed `.html`/layout/include files, also parse the corresponding built pages for HTML errors:
-
-```bash
-GEM_HOME=$(ruby -e 'print Gem.user_dir') ruby -e 'require "nokogiri"; Nokogiri::HTML5(File.read(ARGV[0]), max_errors: 20).errors.each { |e| puts e }' /tmp/shr-site-review/<page>/index.html
-```
-
-  Baseline: the built home page currently has ~9 known HTML5 parse errors (stray `</br>`, nested `<body>` in `_layouts/home.html`, `<h4>` closed with `</h3>`). Flag only NEW errors.
 
 ## Output format
 
 1. **Verdict**: PASS / PASS WITH WARNINGS / FAIL.
-2. **Build & checks**: one line each for `jekyll build` (result + key output line), `htmlproofer` (failure count, new-vs-baseline), and HTML parse check if run. Quote the key output lines.
+2. **Build & checks**: one line each for `jekyll build` (result + key output line), `htmlproofer` (base vs head failure counts, the NEW and FIXED lines), and HTML parse check if run. Quote the key output lines.
 3. **Findings**: numbered list. For each: severity (critical / major / minor), `file:line`, what breaks and why, and a one-line suggested fix. If none, say "No high-confidence findings."
