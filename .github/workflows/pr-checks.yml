@@ -42,7 +42,7 @@ jobs:
             --allow-missing-href \
             2>&1 | tee htmlproofer.log
       - name: Summarise html-proofer result
-        if: always()
+        if: always() && steps.htmlproofer.outcome != 'skipped'
         run: |
           {
             echo "## html-proofer"
