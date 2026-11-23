@@ -1,39 +1,49 @@
-name: Update 2nd line
+name: Weekly rebuild
 
-on: 
-   schedule:
-      - cron: "0 10 * * 2"
-   workflow_dispatch:
-   
+# The homepage and /schedule/ work out the next run at build time from
+# _data/schedule.yml, so the site only needs rebuilding (no file edits) to
+# roll over after each Tuesday run.
+on:
+  schedule:
+    # 14:30 UTC Tuesday is 00:30 (AEST) or 01:30 (AEDT) Wednesday in Sydney.
+    - cron: "30 14 * * 2"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
 jobs:
-  remove-2nd-row:
+  rebuild:
     runs-on: ubuntu-latest
-
-    permissions:
-      # Give the default GITHUB_TOKEN write permission to commit and push the
-      # added or changed files to the repository.
-      contents: write
-
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
 
-      # Other steps that change files in the repository go here
-      # …
-      - name: Remove 2nd line in dates.csv
-        run : sed -i '2d' "./_data/dates.csv"
-      # Commit all changed files back to the repository
-      - uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Redeploy the site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run jekyll.yml -R "${{ github.repository }}" --ref "${{ github.event.repository.default_branch }}"
 
-      # Fail the run (GitHub emails the repo owner) when the schedule is
-      # nearly empty, so someone tops up _data/dates.csv before the
-      # homepage has no upcoming run to show.
-      - name: Fail when fewer than 4 scheduled runs remain
+      # Fails the run (GitHub emails the repo owner) so someone tops up the
+      # schedule before the homepage runs out of upcoming runs.
+      - name: Check the upcoming schedule
+        env:
+          TZ: Australia/Sydney
         run: |
-          rows=$(( $(grep -c '' _data/dates.csv) - 1 ))
-          echo "Scheduled runs remaining: $rows"
-          if [ "$rows" -lt 4 ]; then
-            echo "::error file=_data/dates.csv::Only $rows scheduled runs left in _data/dates.csv - please top up the schedule."
-            exit 1
-          fi
+          ruby - <<'RUBY'
+          require "yaml"
+          require "date"
+
+          runs = YAML.safe_load_file("_data/schedule.yml", permitted_classes: [Date]) || []
+          courses = Dir["_courses/*.md"].map { |f| File.basename(f, ".md") }
+          upcoming = runs.select { |r| r["date"] >= Date.today }
+          unknown = upcoming.flat_map { |r| [r["short_course"], r["long_course"]] }
+                            .compact.reject { |slug| courses.include?(slug) }.uniq
+
+          puts "Upcoming runs: #{upcoming.size}"
+          errors = []
+          errors << "Unknown course slugs: #{unknown.join(', ')}" unless unknown.empty?
+          errors << "Only #{upcoming.size} upcoming runs left - please top up the schedule." if upcoming.size < 4
+          errors.each { |e| puts "::error file=_data/schedule.yml::#{e}" }
+          exit(errors.empty? ? 0 : 1)
+          RUBY
