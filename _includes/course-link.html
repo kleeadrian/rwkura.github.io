@@ -1,0 +1,9 @@
+{%- comment -%} Renders a course from its _courses/ slug as a link with its distance. {%- endcomment -%}
+{%- assign course = site.courses | where: "slug", include.slug | first -%}
+{%- if course -%}
+<a href="{{ course.url | relative_url }}">{{ course.title }}</a>{% if course.distance %} ({{ course.distance }}){% endif %}
+{%- elsif include.slug -%}
+{{ include.slug }}
+{%- else -%}
+N/A
+{%- endif -%}

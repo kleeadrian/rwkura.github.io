@@ -1,0 +1,14 @@
+{%- comment -%}
+Sets `upcoming_runs` to the scheduled runs dated today or later, oldest first,
+using the build time in the site timezone (Australia/Sydney).
+{%- endcomment -%}
+{%- assign today = site.time | date: "%Y-%m-%d" -%}
+{%- assign upcoming_runs = "" | split: "" -%}
+{%- comment -%} A schedule file holding only comments loads as false. {%- endcomment -%}
+{%- assign sorted_runs = site.data.schedule | default: upcoming_runs | sort: "date" -%}
+{%- for run in sorted_runs -%}
+  {%- assign run_day = run.date | date: "%Y-%m-%d" -%}
+  {%- if run_day >= today -%}
+    {%- assign upcoming_runs = upcoming_runs | push: run -%}
+  {%- endif -%}
+{%- endfor -%}

@@ -24,6 +24,7 @@ tagline                  : "Sydney CBD Tuesday Run Club"
 description              : "Sydney Harbour Runners is a community of runners who meet weekly in the Sydney CBD"
 url                      : "https://sydneyharbourrunners.org"
 baseurl                  : # the subpath of your site, e.g. "/blog"
+meeting_point_url        : "https://www.google.com/maps/place/Cockle+Bay+Wharf/@-33.8735291,151.1885932,16z/data=!3m1!5s0x6b12ae3c0ce848ab:0x80ae3821260b68db!4m7!3m6!1s0x6b12ae38898804bf:0x8f493617a0d0cc86!8m2!3d-33.8719968!4d151.2023264!15sCh5Db2NrbGUgQmF5IFdoYXJmIEJpcmQgRm91bnRhaW5aICIeY29ja2xlIGJheSB3aGFyZiBiaXJkIGZvdW50YWlukgESdG91cmlzdF9hdHRyYWN0aW9umgEkQ2hkRFNVaE5NRzluUzBWSlEwRm5TVVI0Tm5SeVRuaEJSUkFC4AEA!16zL20vMGcxd3A2" # map link for the Cockle Bay Wharf Bird Fountain meeting point
 repository               : # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
 teaser                   : # path of fallback teaser image, e.g. "/assets/images/500x300.png"
 logo                     : "/assets/images/SHR_Wordmark_Logo_Colourblack.png"
@@ -227,7 +228,7 @@ sass:
 
 # Outputting
 permalink: /:categories/:title/
-timezone: # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+timezone: Australia/Sydney # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 
 
 # Pagination with jekyll-paginate

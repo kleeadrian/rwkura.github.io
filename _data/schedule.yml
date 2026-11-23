@@ -1,0 +1,51 @@
+# Weekly run schedule. The homepage and /schedule/ pick the next run by
+# comparing each date with the build date in Australia/Sydney time, and a
+# weekly scheduled rebuild rolls the site over. Past runs can stay here.
+#
+# Fields:
+#   date:         YYYY-MM-DD
+#   time:         start time shown on the site, e.g. "6:00pm"
+#   running:      true or false
+#   note:         optional text, e.g. "holiday break!" or "SHR's 13th Birthday!"
+#   short_course: file name in _courses/ without .md (leave empty for none)
+#   long_course:  file name in _courses/ without .md (leave empty for none)
+
+- date: 2026-11-24
+  time: "6:00pm"
+  running: true
+  short_course: gardens-short
+  long_course: gardens-long
+
+- date: 2026-12-01
+  time: "6:00pm"
+  running: true
+  short_course: gardens-short
+  long_course: gardens-long
+
+- date: 2026-12-08
+  time: "6:00pm"
+  running: true
+  short_course: santa-hat-run
+  long_course:
+
+- date: 2026-12-15
+  time: "6:00pm"
+  running: true
+  short_course: rushcutters-short
+  long_course: rushcutters-long
+
+- date: 2026-12-22
+  time: "6:00pm"
+  running: false
+  note: holiday break!
+
+- date: 2026-12-29
+  time: "6:00pm"
+  running: false
+  note: holiday break!
+
+- date: 2027-01-05
+  time: "6:00pm"
+  running: true
+  short_course: pyrmont
+  long_course:
