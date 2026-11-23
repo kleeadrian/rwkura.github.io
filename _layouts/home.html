@@ -18,10 +18,15 @@ layout: archive
     {% assign long_pages = site.courses | where_exp: 'page', 'page.url==long_course_url' %}
     {% for page in long_pages %}({{ page.distance }}){% endfor %}
   </div>
-  {% else %}
+  {% elsif nextRun %}
   <div id="nextRunNo">
     <b>We won't be running on {{ site.data.dates[0].Date }}, our next run is on {{ nextRun["Date"] }}</b><br>
     Check our <a href="/schedule">schedule</a> for information about future weeks.
+  </div>
+  {% else %}
+  <div id="nextRunNo">
+    <b>We don't have any upcoming runs scheduled right now.</b><br>
+    Check back soon, or ask in the <a href="https://www.facebook.com/groups/sydneyharbourrunners/">Sydney Harbour Runners Facebook group</a>.
   </div>
   {% endif %}
 
