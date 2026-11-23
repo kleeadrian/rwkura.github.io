@@ -4,7 +4,8 @@ using the build time in the site timezone (Australia/Sydney).
 {%- endcomment -%}
 {%- assign today = site.time | date: "%Y-%m-%d" -%}
 {%- assign upcoming_runs = "" | split: "" -%}
-{%- assign sorted_runs = site.data.schedule | sort: "date" -%}
+{%- comment -%} A schedule file holding only comments loads as false. {%- endcomment -%}
+{%- assign sorted_runs = site.data.schedule | default: upcoming_runs | sort: "date" -%}
 {%- for run in sorted_runs -%}
   {%- assign run_day = run.date | date: "%Y-%m-%d" -%}
   {%- if run_day >= today -%}
