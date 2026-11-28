@@ -1,20 +1,24 @@
 {% capture logo_path %}{{ site.logo }}{% endcapture %}
+{% assign logo_alt = site.logo_alt | default: site.title %}
+{% assign masthead_title_text = site.masthead_title | default: site.title | strip %}
 
 <div class="masthead">
   <div class="masthead__inner-wrap">
     <div class="masthead__menu">
       <nav id="site-nav" class="greedy-nav">
         {% unless logo_path == empty %}
-          <a class="site-logo" href="{{ '/' | relative_url }}"><img src="{{ logo_path | relative_url }}" alt="{{ site.masthead_title | default: site.title }}"></a>
+          <a class="site-logo" href="{{ '/' | relative_url }}"><img src="{{ logo_path | relative_url }}" alt="{{ logo_alt | escape }}"></a>
         {% endunless %}
-        <a class="site-title" href="{{ '/' | relative_url }}">
-          {{ site.masthead_title | default: site.title }}
-          {% if site.subtitle %}<span class="site-subtitle">{{ site.subtitle }}</span>{% endif %}
-        </a>
+        {% unless masthead_title_text == empty %}
+          <a class="site-title" href="{{ '/' | relative_url }}">
+            {{ masthead_title_text | escape }}
+            {% if site.subtitle %}<span class="site-subtitle">{{ site.subtitle }}</span>{% endif %}
+          </a>
+        {% endunless %}
         <ul class="visible-links">
           {%- for link in site.data.navigation.main -%}
             <li class="masthead__menu-item">
-              <a style="font-size:.9em" href="{{ link.url | relative_url }}"{% if link.description %} title="{{ link.description }}"{% endif %}{% if link.title=="FB"%}target="_blank"{% endif %}>{{ link.title }}</a>
+              <a href="{{ link.url | relative_url }}"{% if link.description %} title="{{ link.description }}"{% endif %}{% if link.title == "Join us" %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.title }}</a>
             </li>
           {%- endfor -%}
         </ul>

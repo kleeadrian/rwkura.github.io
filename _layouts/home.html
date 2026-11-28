@@ -1,103 +1,108 @@
 ---
 layout: archive
-gallery_images:
-  - image_path: /assets/images/4d.jpeg
-    alt_text: "4D"
-  - image_path: /assets/images/Hoka.png
-    alt_text: "Hoka"
-  - image_path: /assets/images/lskd.png
-    alt_text: "LSKD"
-  - image_path: /assets/images/maurten.png
-  - image_path: /assets/images/Rele.jpg
-  - image_path: /assets/images/run-nation2.png
-  - image_path: /assets/images/shokz.png
-  - image_path: /assets/images/StrengthPilates.jpg
-  - image_path: /assets/images/stretchlab.png
-
-
 ---
 
-{{ content }}
+{% assign now_timestamp = site.time | date: "%s" | plus: 0 %}
+{% assign next_run = nil %}
+{% for run in site.data.dates %}
+  {% if run.Status == "We are running!" %}
+    {% capture run_datetime %}{{ run.Date }} {{ run.Time }}{% endcapture %}
+    {% assign run_timestamp = run_datetime | date: "%s" | plus: 0 %}
+    {% if run_timestamp >= now_timestamp %}
+      {% assign next_run = run %}
+      {% break %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
 
-{% assign short_course_url = site.data.dates[0]["Short Course"] | split:"href='" | last | split:"'" | first %}
-{% assign long_course_url = site.data.dates[0]["Long Course"] | split:"href='" | last | split:"'" | first %}
+<div class="home-page">
+  <section class="home-hero" aria-labelledby="home-title">
+    <div class="home-hero__copy">
+      <p class="home-eyebrow">Sydney CBD · Tuesday evenings</p>
+      <h1 id="home-title">Good runs. Great company. Sydney Harbour.</h1>
+      <p class="home-hero__lead">A free, friendly running club with routes and pace groups for all levels. Come along, find your stride, and enjoy the harbour with us.</p>
+      <div class="home-actions">
+        <a class="home-button home-button--primary" href="{{ '/schedule/' | relative_url }}">See upcoming runs</a>
+        <a class="home-button home-button--secondary" href="{{ '/courses/' | relative_url }}">Explore the courses</a>
+      </div>
+    </div>
 
-<div style="font-size:.85em">
-  {% assign nextRun = site.data.dates | find: "Status", "We are running!" %}
-  {% if site.data.dates[0]["Status"] == "We are running!" %}
-  <div id="nextRunYes">
-    <b>Our next run is on {{ site.data.dates[0].Date }} at {{ site.data.dates[0].Time }}</b><br> <b>Short Course:</b>
-    {{site.data.dates[0]["Short Course"]}}
-    {% assign short_pages = site.courses | where_exp: 'page',
-    'page.url==short_course_url' %}
-    {% for page in short_pages %}
-    ({{page.distance}})
-    {% endfor %}
-    <br> <b>Long Course:</b> {{site.data.dates[0]["Long Course"]}}
-    {% assign long_pages = site.courses | where_exp: 'page',
-    'page.url==long_course_url' %}
-    {% for page in long_pages %}
-    ({{page.distance}})
-    {% endfor %}
-  </div>
+    <figure class="home-hero__photo">
+      <img
+        src="{{ '/assets/images/SHR Banner Crop.jpg' | relative_url }}"
+        alt="Sydney Harbour Runners gathered at Darling Harbour with their Melbourne Harbour Runners flag"
+        width="1920"
+        height="609"
+        fetchpriority="high">
+    </figure>
+  </section>
+
+  {% if next_run %}
+    {% assign short_course_url = next_run["Short Course"] | split: "href='" | last | split: "'" | first %}
+    {% assign long_course_url = next_run["Long Course"] | split: "href='" | last | split: "'" | first %}
+    {% assign short_course = site.courses | where: "url", short_course_url | first %}
+    {% assign long_course = site.courses | where: "url", long_course_url | first %}
+
+    <section class="next-run-card" aria-labelledby="next-run-title">
+      <div class="next-run-card__intro">
+        <p class="home-eyebrow">Your next Tuesday run</p>
+        <h2 id="next-run-title">{{ next_run.Date }}</h2>
+        <p>Meet from 6:00pm. The group leaves at 6:15pm.</p>
+      </div>
+      <div class="next-run-card__routes">
+        <div class="next-run-card__route">
+          <span class="next-run-card__label">Short course</span>
+          <div>{{ next_run["Short Course"] }}{% if short_course %}<span class="route-distance">{{ short_course.distance }}</span>{% endif %}</div>
+        </div>
+        <div class="next-run-card__route">
+          <span class="next-run-card__label">Long course</span>
+          <div>{{ next_run["Long Course"] }}{% if long_course %}<span class="route-distance">{{ long_course.distance }}</span>{% endif %}</div>
+        </div>
+      </div>
+      <a class="next-run-card__directions" href="https://goo.gl/maps/UNHAMsSZq4d9pz5M9" target="_blank" rel="noopener noreferrer">Get directions <span aria-hidden="true">↗</span></a>
+    </section>
   {% else %}
-  <div id="nextRunNo">
-    <b>We won't be running on {{ site.data.dates[0].Date }}, our next run is on {{nextRun["Date"]}}</b> <br>
-    Check our <a href="/schedule">schedule</a> for information about future weeks.
-  </div>
+    <section class="next-run-card next-run-card--empty" aria-labelledby="next-run-title">
+      <div>
+        <p class="home-eyebrow">Weekly schedule</p>
+        <h2 id="next-run-title">Check before you head out</h2>
+        <p>There are no upcoming group runs listed right now. See the schedule for the latest updates.</p>
+      </div>
+      <a class="home-button home-button--primary" href="{{ '/schedule/' | relative_url }}">View the schedule</a>
+    </section>
   {% endif %}
 
-  <img src="/assets/images/SHR Banner Crop.jpg" alt="SHR Banner" height="400">
-  </br>
-  </br>
-
-  <body>
-    <p>Sydney Harbour Runners are a community of runners, and we make our SHR run nights relaxed and social. There is
-      a
-      pace group for most runners, and we welcome all new runners to come along.</p>
-    <p>Weekly group runs are FREE and we meet on <b>Tuesdays from 6:00pm</b> at the <a
-        href="https://goo.gl/maps/UNHAMsSZq4d9pz5M9">Cockle Bay Wharf Bird Fountain</a> in Darling
-      Harbour (Sydney CBD).</p>
-    <ul>
-      <li>Two distance options: short course around 6km-8km, long course around 11km-13km
-      <li>Pace groups from 4:30 to 6:15 min/km - our routes for each week are shown <a href="/schedule">here</a></li>
-      <li>Bag drop available</li>
-      <li>Post-run meals and drink specials</li>
-      <li>Runs leave 6:15pm from the Cockle Bay Wharf Bird Fountain</li>
-    </ul>
-  </body>
-
-  <h4>When & Where do you meet?</h3>
-    <p>Tuesdays at 6:00pm starting at the <a href="https://goo.gl/maps/UNHAMsSZq4d9pz5M9">Cockle Bay Wharf Bird
-        Fountain</a> in Darling Harbour</p>
-
-    <h4>How do I join?</h3>
-      <p>Just rock up! There is no need to register and we are 100% free to join.</p>
-
-      <h4>Any questions?</h3>
-        <p>
-          Please join the <a href="https://www.facebook.com/groups/sydneyharbourrunners/">Sydney Harbour Runners
-            Facebook
-            group</a> and make a post!
-        </p>
-
-        <!-- <h1 style="text-align: center;">Thank you to our friends for supporting us!</h1>
-        <a href="/friends"><img src="assets\images\CombinedFriends.png"
-            style="max-width: 85%; display: block; margin-right: auto; margin-left: auto;"></a> -->
-<!-- 
-<div class="mini-gallery">
-  {% assign gallery = page.gallery_images | default: layout.gallery_images %}
-  {% for item in gallery %}
-    <div class="gallery-item">
-      <img src="{{ item.image_path }}" alt="{{ item.alt_text }}">
+  <section class="home-details" aria-labelledby="home-details-title">
+    <div class="section-heading">
+      <p class="home-eyebrow">A good run, your way</p>
+      <h2 id="home-details-title">Make Tuesday your running night</h2>
     </div>
-  {% endfor %}
-</div> -->
-          </div>
 
-{% assign entries_layout = page.entries_layout | default: 'list' %}
-<div class="entries-{{ entries_layout }}">
-  {% include documents-collection.html entries=posts type=entries_layout %}
+    <div class="home-feature-grid">
+      <article class="home-feature-card">
+        <span class="home-feature-card__number" aria-hidden="true">01</span>
+        <h3>Meet by the harbour</h3>
+        <p>We meet Tuesdays from 6:00pm at the <a href="https://goo.gl/maps/UNHAMsSZq4d9pz5M9" target="_blank" rel="noopener noreferrer">Cockle Bay Wharf Bird Fountain</a>. Runs leave at 6:15pm.</p>
+      </article>
+      <article class="home-feature-card">
+        <span class="home-feature-card__number" aria-hidden="true">02</span>
+        <h3>Choose your distance</h3>
+        <p>Short courses are around 6–8km and long courses around 11–13km. The routes change, so check the <a href="{{ '/schedule/' | relative_url }}">weekly schedule</a>.</p>
+      </article>
+      <article class="home-feature-card">
+        <span class="home-feature-card__number" aria-hidden="true">03</span>
+        <h3>Run at your pace</h3>
+        <p>Pace groups range from 4:30 to 6:15 min/km. There’s bag drop, plus post-run meals and drink specials.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="home-join" aria-labelledby="home-join-title">
+    <div>
+      <p class="home-eyebrow">New to the group?</p>
+      <h2 id="home-join-title">Just show up and run.</h2>
+      <p>There’s no registration and our weekly group runs are free. Questions? Join the Facebook group and say hello.</p>
+    </div>
+    <a class="home-button home-button--light" href="https://www.facebook.com/groups/sydneyharbourrunners/" target="_blank" rel="noopener noreferrer">Join the Facebook group <span aria-hidden="true">↗</span></a>
+  </section>
 </div>
-
-{% include paginator.html %}

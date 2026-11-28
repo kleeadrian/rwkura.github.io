@@ -5,25 +5,56 @@ permalink: /schedule/
 layout: archive
 ---
 
-</br>
-<table>
-    {% for row in site.data.dates %}
-      {% if forloop.first %}
-      <tr>
-        {% for pair in row %}
-          <th>{{ pair[0] }}</th>
+{% assign now_timestamp = site.time | date: "%s" | plus: 0 %}
+
+<div class="schedule-intro">
+  <p>Join us every Tuesday evening. We meet from 6:00pm and set off together at 6:15pm.</p>
+</div>
+
+{% if site.data.dates and site.data.dates.size > 0 %}
+  <div class="schedule-table-wrap" role="region" aria-label="Weekly running schedule" tabindex="0">
+    <table class="schedule-table">
+      <caption class="visually-hidden">Sydney Harbour Runners weekly schedule</caption>
+      <thead>
+        <tr>
+          {% for pair in site.data.dates[0] %}
+            <th scope="col">{{ pair[0] }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in site.data.dates %}
+          {% capture row_end_datetime %}{{ row.Date }} 11:59pm{% endcapture %}
+          {% assign row_timestamp = row_end_datetime | date: "%s" | plus: 0 %}
+          {% if row_timestamp >= now_timestamp %}
+            <tr>
+              {% for pair in row %}
+                <td>
+                  {% if pair[0] == "Status" %}
+                    <span class="schedule-status{% if pair[1] contains 'Not running' %} schedule-status--off{% endif %}">{{ pair[1] }}</span>
+                  {% else %}
+                    {{ pair[1] }}
+                  {% endif %}
+                </td>
+              {% endfor %}
+            </tr>
+          {% endif %}
         {% endfor %}
-      </tr>
-      {% endif %}
-  
-      {% tablerow pair in row %}
-        {{ pair[1] }}
-      {% endtablerow %}
-    {% endfor %}
-  </table>
-<br>
-<b>How to import GPX files into your running app & smartwatch</b>
-<ul>
-<li><a href="https://support.garmin.com/en-AU/?faq=wKuZXCaZRP4mWPX5aRz5h5">Garmin App</a></li>
-<li><a href="https://support.strava.com/hc/en-us/articles/206811950-Uploading-Route-Files#:~:text=You%20can%20create%20a%20Strava,use%20to%20create%20a%20route.">Strava Website</a></li>
-</ul>
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="schedule-empty">No run dates are listed yet. Please check back soon.</p>
+{% endif %}
+
+<section class="schedule-help" aria-labelledby="schedule-help-title">
+  <div>
+    <p class="home-eyebrow">Take the route with you</p>
+    <h2 id="schedule-help-title">Use a GPX route on your watch or app</h2>
+    <p>Download a course from the <a href="{{ '/courses/' | relative_url }}">courses page</a>, then follow the import guide for your app.</p>
+  </div>
+  <div class="schedule-help__links">
+    <a href="https://support.garmin.com/en-AU/?faq=wKuZXCaZRP4mWPX5aRz5h5" target="_blank" rel="noopener noreferrer">Garmin instructions <span aria-hidden="true">↗</span></a>
+    <a href="https://support.strava.com/hc/en-us/articles/206811950-Uploading-Route-Files" target="_blank" rel="noopener noreferrer">Strava instructions <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
